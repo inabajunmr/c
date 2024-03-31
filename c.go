@@ -15,40 +15,48 @@ func main() {
 	fmt.Println(compile(os.Args[1]))
 }
 
+func translateOperator(nodeType NodeType) string {
+	switch nodeType {
+	case ADD:
+		return "add x0, x0, x1\n"
+	case SUB:
+		return "sub x0, x0, x1\n"
+	case MUL:
+		return "mul x0, x0, x1\n"
+	case DIV:
+		return "udiv x0, x0, x1\n"
+	default:
+		os.Exit(1)
+		return ""
+	}
+}
+
+func GenerateAssembly(result *strings.Builder, node *Node) {
+	if node.NodeType == NUM {
+		fmt.Fprintf(result, "mov x0, %v\n", node.Number) // 直接できる気もする？
+		fmt.Fprintln(result, "str x0, [sp, #-16]!")
+	} else {
+		// top of 2 values are target of the operation
+		GenerateAssembly(result, node.Left)
+		GenerateAssembly(result, node.Right)
+		// pop both values
+		fmt.Fprintln(result, "ldr x1, [sp], #16")
+		fmt.Fprintln(result, "ldr x0, [sp], #16")
+		// operation
+		fmt.Fprint(result, translateOperator(node.NodeType))
+		fmt.Fprintln(result, "str x0, [sp, #-16]!")
+	}
+}
+
 func compile(source string) string {
-	tokens := Tokenize(source)
+	node := Parse(Tokenize(source))
 
 	var result strings.Builder
 
 	fmt.Fprintln(&result, ".global main")
 	fmt.Fprintln(&result, "main:")
-
-	if number, ok := tokens[0].(NumberToken); ok {
-		fmt.Fprintf(&result, "mov x0, %d\n", number.Value)
-	} else {
-		os.Exit(1)
-	}
-
-	index := 1
-	for len(tokens) > index {
-		t := tokens[index]
-		if operator, ok := t.(OperatorToken); ok {
-			index++
-			if number, ok := tokens[index].(NumberToken); ok {
-				if operator.Value == "+" {
-					fmt.Fprintf(&result, "add x0, x0, %d\n", number.Value)
-				} else if operator.Value == "-" {
-					fmt.Fprintf(&result, "sub x0, x0, %d\n", number.Value)
-				} else {
-					os.Exit(1)
-				}
-			} else {
-				os.Exit(1)
-			}
-		}
-		index++
-	}
-
+	GenerateAssembly(&result, node)
+	fmt.Fprintln(&result, "ldr x0, [sp], #16")
 	fmt.Fprintln(&result, "mov x8, 93")
 	fmt.Fprintln(&result, "svc 0")
 

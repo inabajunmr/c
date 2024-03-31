@@ -11,16 +11,16 @@ func TestTokenize(t *testing.T) {
 		source   string
 		expected []Token
 	}{
-		{"only numbers", "12", []Token{NumberToken{12}}},
-		{"only operators", "+-+", []Token{OperatorToken{"+"}, OperatorToken{"-"}, OperatorToken{"+"}}},
-		{"numbers and operators", "12345+234", []Token{NumberToken{12345}, OperatorToken{"+"}, NumberToken{234}}},
+		{"only numbers", "12", []Token{NumberToken{12}, EOFToken{}}},
+		{"only operators", "+-+*/", []Token{PlusToken{}, MinusToken{}, PlusToken{}, MultiplicationToken{}, DivisionToken{}, EOFToken{}}},
+		{"numbers and operators", "12345+234", []Token{NumberToken{12345}, PlusToken{}, NumberToken{234}, EOFToken{}}},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := Tokenize(tc.source)
 
-			if !reflect.DeepEqual(actual, tc.expected) {
+			if !reflect.DeepEqual(actual.tokens, tc.expected) {
 				t.Errorf("got %d, want %d", actual, tc.expected)
 			}
 		})
