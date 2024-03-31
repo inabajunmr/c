@@ -8,6 +8,9 @@ import (
 
 func TestMain(t *testing.T) {
 	assert(t, "41", 41)
+	assert(t, "5+2", 7)
+	assert(t, "5-2", 3)
+	assert(t, "5-2+3", 6)
 }
 
 func assert(t *testing.T, source string, expectedCode int) {
