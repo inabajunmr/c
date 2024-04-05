@@ -15,6 +15,12 @@ const (
 	MUL
 	DIV
 	NUM
+	EQ
+	NE
+	GT
+	GE
+	LT
+	LE
 )
 
 func mul(t *Tokens) *Node {
@@ -55,7 +61,7 @@ func primary(t *Tokens) *Node {
 	}
 }
 
-func expr(t *Tokens) *Node {
+func add(t *Tokens) *Node {
 	node := mul(t)
 	for {
 		if t.ConsumePlusToken() {
@@ -66,6 +72,40 @@ func expr(t *Tokens) *Node {
 			return node
 		}
 	}
+}
+
+func relational(t *Tokens) *Node {
+	node := add(t)
+	for {
+		if t.ConsumeGreaterToken() {
+			node = &Node{NodeType: GT, Left: node, Right: add(t)}
+		} else if t.ConsumeGreaterThanEqualToken() {
+			node = &Node{NodeType: GE, Left: node, Right: add(t)}
+		} else if t.ConsumeLessToken() {
+			node = &Node{NodeType: LT, Left: node, Right: add(t)}
+		} else if t.ConsumeLessThanToken() {
+			node = &Node{NodeType: LE, Left: node, Right: add(t)}
+		} else {
+			return node
+		}
+	}
+}
+
+func equality(t *Tokens) *Node {
+	node := relational(t)
+	for {
+		if t.ConsumeEqualToken() {
+			node = &Node{NodeType: EQ, Left: node, Right: relational(t)}
+		} else if t.ConsumeNotEqualToken() {
+			node = &Node{NodeType: NE, Left: node, Right: relational(t)}
+		} else {
+			return node
+		}
+	}
+}
+
+func expr(t *Tokens) *Node {
+	return equality(t)
 }
 
 func Parse(tokens *Tokens) *Node {

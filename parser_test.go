@@ -48,6 +48,23 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:   "comparison",
+			source: "(1==1)!=(2>=3)",
+			expected: &Node{
+				NodeType: NE,
+				Left: &Node{
+					NodeType: EQ,
+					Left:     &Node{NodeType: NUM, Number: 1},
+					Right:    &Node{NodeType: NUM, Number: 1},
+				},
+				Right: &Node{
+					NodeType: GE,
+					Left:     &Node{NodeType: NUM, Number: 2},
+					Right:    &Node{NodeType: NUM, Number: 3},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {

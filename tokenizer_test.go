@@ -14,12 +14,19 @@ func TestTokenize(t *testing.T) {
 		{"only numbers", "12", []Token{NumberToken{12}, EOFToken{}}},
 		{"only operators", "+-+*/", []Token{PlusToken{}, MinusToken{}, PlusToken{}, MultiplicationToken{}, DivisionToken{}, EOFToken{}}},
 		{"numbers and operators", "12345+234", []Token{NumberToken{12345}, PlusToken{}, NumberToken{234}, EOFToken{}}},
+		{"comparison operators", "1==2!=3<4<=5>6>=7", []Token{
+			NumberToken{1}, EqualToken{},
+			NumberToken{2}, NotEqualToken{},
+			NumberToken{3}, LessToken{},
+			NumberToken{4}, LessThanEqualToken{},
+			NumberToken{5}, GreaterToken{},
+			NumberToken{6}, GreaterThanEqualToken{}, NumberToken{7}, EOFToken{},
+		}},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := Tokenize(tc.source)
-
 			if !reflect.DeepEqual(actual.tokens, tc.expected) {
 				t.Errorf("got %d, want %d", actual, tc.expected)
 			}

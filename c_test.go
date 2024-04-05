@@ -17,6 +17,11 @@ func TestMain(t *testing.T) {
 	assert(t, "6*2", 12)
 	assert(t, "-6*-2", 12)
 	assert(t, "(-3+3+6)*+8/(-12*-2)", 2)
+	assert(t, "3==3", 1)
+	assert(t, "3>=(1+2)", 1)
+	assert(t, "4<=(1+2)", 0)
+	assert(t, "(4*2)!=(1+2)", 1)
+	assert(t, "(1==1)!=(1!=1)", 1)
 }
 
 func assert(t *testing.T, source string, expectedCode int) {
@@ -33,6 +38,6 @@ func assert(t *testing.T, source string, expectedCode int) {
 	cmd.Run()
 	code := cmd.ProcessState.ExitCode()
 	if code != expectedCode {
-		t.Errorf("code is %v", code)
+		t.Errorf("source is %v, code is %v", source, code)
 	}
 }

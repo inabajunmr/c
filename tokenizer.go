@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ func (ts *Tokens) ConsumeRParenthesisTokenMust() bool {
 		ts.index++
 		return true
 	}
-	log.Fatal("not )")
+	log.Fatalf("not ):%+v", ts.tokens[ts.index])
 	return false
 }
 
@@ -71,12 +72,67 @@ func (ts *Tokens) ConsumeMinusToken() bool {
 	return false
 }
 
+func (ts *Tokens) ConsumeGreaterToken() bool {
+	if _, ok := ts.tokens[ts.index].(GreaterToken); ok {
+		ts.index++
+		return true
+	}
+	return false
+}
+
+func (ts *Tokens) ConsumeGreaterThanEqualToken() bool {
+	if _, ok := ts.tokens[ts.index].(GreaterThanEqualToken); ok {
+		ts.index++
+		return true
+	}
+	return false
+}
+
+func (ts *Tokens) ConsumeLessToken() bool {
+	if _, ok := ts.tokens[ts.index].(LessToken); ok {
+		ts.index++
+		return true
+	}
+	return false
+}
+
+func (ts *Tokens) ConsumeLessThanToken() bool {
+	if _, ok := ts.tokens[ts.index].(LessThanEqualToken); ok {
+		ts.index++
+		return true
+	}
+	return false
+}
+
+func (ts *Tokens) ConsumeEqualToken() bool {
+	if _, ok := ts.tokens[ts.index].(EqualToken); ok {
+		ts.index++
+		return true
+	}
+	return false
+}
+
+func (ts *Tokens) ConsumeNotEqualToken() bool {
+	if _, ok := ts.tokens[ts.index].(NotEqualToken); ok {
+		ts.index++
+		return true
+	}
+	return false
+}
+
 type Token interface{}
 
 type PlusToken struct{}
 type MinusToken struct{}
 type MultiplicationToken struct{}
 type DivisionToken struct{}
+
+type LessToken struct{}
+type LessThanEqualToken struct{}
+type GreaterToken struct{}
+type GreaterThanEqualToken struct{}
+type EqualToken struct{}
+type NotEqualToken struct{}
 
 type NumberToken struct {
 	Value int
@@ -110,10 +166,42 @@ func Tokenize(source string) *Tokens {
 			tokens.tokens = append(tokens.tokens, LParenthesisToken{})
 		} else if s[i] == ")" {
 			tokens.tokens = append(tokens.tokens, RParenthesisToken{})
+		} else if isComparisonOperatorSymbol(s[i]) {
+			if isComparisonOperatorSymbol(s[i+1]) {
+				tokens.tokens = append(tokens.tokens, mapComparisonOperator(source[i:i+2]))
+				i = i + 1
+			} else {
+				tokens.tokens = append(tokens.tokens, mapComparisonOperator(s[i]))
+			}
+		} else if s[i] == "!" && s[i+1] == "=" {
+			tokens.tokens = append(tokens.tokens, NotEqualToken{})
+			i = i + 1
 		}
 	}
 	tokens.tokens = append(tokens.tokens, EOFToken{})
 	return &tokens
+}
+
+func isComparisonOperatorSymbol(s string) bool {
+	return s[0] == '=' || s[0] == '>' || s[0] == '<'
+}
+
+func mapComparisonOperator(s string) Token {
+	switch s {
+	case "==":
+		return EqualToken{}
+	case "<":
+		return LessToken{}
+	case ">":
+		return GreaterToken{}
+	case "<=":
+		return LessThanEqualToken{}
+	case ">=":
+		return GreaterThanEqualToken{}
+	}
+
+	os.Exit(1)
+	return nil
 }
 
 func lastIndex(s string, pattern string) int {
