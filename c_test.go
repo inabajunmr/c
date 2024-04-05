@@ -15,6 +15,8 @@ func TestMain(t *testing.T) {
 	assert(t, "6*2", 12)
 	assert(t, "(3+3)*8/(12*2)", 2)
 	assert(t, "6*2", 12)
+	assert(t, "-6*-2", 12)
+	assert(t, "(-3+3+6)*+8/(-12*-2)", 2)
 }
 
 func assert(t *testing.T, source string, expectedCode int) {

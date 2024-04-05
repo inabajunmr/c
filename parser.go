@@ -18,16 +18,29 @@ const (
 )
 
 func mul(t *Tokens) *Node {
-	node := primary(t)
+	node := unary(t)
 	for {
 		if t.ConsumeMultiplicationToken() {
-			node = &Node{NodeType: MUL, Left: node, Right: primary(t)}
+			node = &Node{NodeType: MUL, Left: node, Right: unary(t)}
 		} else if t.ConsumeDivisionToken() {
-			node = &Node{NodeType: DIV, Left: node, Right: primary(t)}
+			node = &Node{NodeType: DIV, Left: node, Right: unary(t)}
 		} else {
 			return node
 		}
 	}
+}
+
+func unary(t *Tokens) *Node {
+	if t.ConsumePlusToken() {
+		return primary(t)
+	} else if t.ConsumeMinusToken() {
+		// 0 - value = -value
+		return &Node{NodeType: SUB, Left: &Node{
+			NodeType: NUM,
+			Number:   0,
+		}, Right: primary(t)}
+	}
+	return primary(t)
 }
 
 func primary(t *Tokens) *Node {
