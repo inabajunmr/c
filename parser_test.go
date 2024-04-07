@@ -9,21 +9,21 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		name     string
 		source   string
-		expected *Node
+		expected []*Node
 	}{
 		{
 			name:   "just division",
-			source: "4/1",
-			expected: &Node{
+			source: "4/1;",
+			expected: []*Node{{
 				NodeType: DIV,
 				Left:     &Node{NodeType: NUM, Number: 4},
 				Right:    &Node{NodeType: NUM, Number: 1},
-			},
+			}},
 		},
 		{
 			name:   "complex",
-			source: "(3+2)*(4/2)+(3+2*3)",
-			expected: &Node{
+			source: "(3+2)*(4/2)+(3+2*3);",
+			expected: []*Node{{
 				NodeType: ADD,
 				Left: &Node{
 					NodeType: MUL,
@@ -46,12 +46,12 @@ func TestParse(t *testing.T) {
 						Left:     &Node{NodeType: NUM, Number: 2},
 						Right:    &Node{NodeType: NUM, Number: 3}},
 				},
-			},
+			}},
 		},
 		{
 			name:   "comparison",
-			source: "(1==1)!=(2>=3)",
-			expected: &Node{
+			source: "(1==1)!=(2>=3);",
+			expected: []*Node{{
 				NodeType: NE,
 				Left: &Node{
 					NodeType: EQ,
@@ -62,6 +62,31 @@ func TestParse(t *testing.T) {
 					NodeType: GE,
 					Left:     &Node{NodeType: NUM, Number: 2},
 					Right:    &Node{NodeType: NUM, Number: 3},
+				},
+			}},
+		},
+		{
+			name:   "multiple statement",
+			source: "4/1;a=1;b=a+1;",
+			expected: []*Node{
+				{
+					NodeType: DIV,
+					Left:     &Node{NodeType: NUM, Number: 4},
+					Right:    &Node{NodeType: NUM, Number: 1},
+				},
+				{
+					NodeType: ASSIGN,
+					Left:     &Node{NodeType: LVAR, Offset: 16},
+					Right:    &Node{NodeType: NUM, Number: 1},
+				},
+				{
+					NodeType: ASSIGN,
+					Left:     &Node{NodeType: LVAR, Offset: 32},
+					Right: &Node{
+						NodeType: ADD,
+						Left:     &Node{NodeType: LVAR, Offset: 16},
+						Right:    &Node{NodeType: NUM, Number: 1},
+					},
 				},
 			},
 		},

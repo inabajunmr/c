@@ -22,6 +22,12 @@ func TestTokenize(t *testing.T) {
 			NumberToken{5}, GreaterToken{},
 			NumberToken{6}, GreaterThanEqualToken{}, NumberToken{7}, EOFToken{},
 		}},
+		{"assign", "a=100+5", []Token{IdentToken{"a"}, AssignToken{}, NumberToken{100}, PlusToken{}, NumberToken{5}, EOFToken{}}},
+		{"assign", "a=100+5;b=1==2", []Token{
+			IdentToken{"a"}, AssignToken{}, NumberToken{100}, PlusToken{}, NumberToken{5},
+			SemicolonToken{},
+			IdentToken{"b"}, AssignToken{}, NumberToken{1}, EqualToken{}, NumberToken{2},
+			EOFToken{}}},
 	}
 
 	for _, tc := range tests {

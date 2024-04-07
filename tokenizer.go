@@ -14,6 +14,14 @@ type Tokens struct {
 	index  int
 }
 
+func (ts *Tokens) ConsumeIdent() *IdentToken {
+	if ident, ok := ts.tokens[ts.index].(IdentToken); ok {
+		ts.index++
+		return &ident
+	}
+	return nil
+}
+
 func (ts *Tokens) ConsumeNumberMust() *NumberToken {
 	if number, ok := ts.tokens[ts.index].(NumberToken); ok {
 		ts.index++
@@ -104,6 +112,23 @@ func (ts *Tokens) ConsumeLessThanToken() bool {
 	return false
 }
 
+func (ts *Tokens) ConsumeSemicolonTokenMust() bool {
+	if _, ok := ts.tokens[ts.index].(SemicolonToken); ok {
+		ts.index++
+		return true
+	}
+	log.Fatal("not ;")
+	return false
+}
+
+func (ts *Tokens) ConsumeAssignToken() bool {
+	if _, ok := ts.tokens[ts.index].(AssignToken); ok {
+		ts.index++
+		return true
+	}
+	return false
+}
+
 func (ts *Tokens) ConsumeEqualToken() bool {
 	if _, ok := ts.tokens[ts.index].(EqualToken); ok {
 		ts.index++
@@ -138,8 +163,16 @@ type NumberToken struct {
 	Value int
 }
 
+type IdentToken struct {
+	Value string
+}
+
+type AssignToken struct{}
+
 type LParenthesisToken struct{}
 type RParenthesisToken struct{}
+
+type SemicolonToken struct{}
 
 type EOFToken struct{}
 
@@ -166,6 +199,8 @@ func Tokenize(source string) *Tokens {
 			tokens.tokens = append(tokens.tokens, LParenthesisToken{})
 		} else if s[i] == ")" {
 			tokens.tokens = append(tokens.tokens, RParenthesisToken{})
+		} else if s[i] == "=" && !isComparisonOperatorSymbol(s[i+1]) {
+			tokens.tokens = append(tokens.tokens, AssignToken{})
 		} else if isComparisonOperatorSymbol(s[i]) {
 			if isComparisonOperatorSymbol(s[i+1]) {
 				tokens.tokens = append(tokens.tokens, mapComparisonOperator(source[i:i+2]))
@@ -176,10 +211,19 @@ func Tokenize(source string) *Tokens {
 		} else if s[i] == "!" && s[i+1] == "=" {
 			tokens.tokens = append(tokens.tokens, NotEqualToken{})
 			i = i + 1
+		} else if isIdent(s[i]) {
+			tokens.tokens = append(tokens.tokens, IdentToken{s[i]})
+		} else if s[i] == ";" {
+			tokens.tokens = append(tokens.tokens, SemicolonToken{})
 		}
 	}
 	tokens.tokens = append(tokens.tokens, EOFToken{})
 	return &tokens
+}
+
+func isIdent(s string) bool {
+	re := regexp.MustCompile("[a-z]")
+	return re.Match([]byte(s))
 }
 
 func isComparisonOperatorSymbol(s string) bool {

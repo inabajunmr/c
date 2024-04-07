@@ -22,7 +22,7 @@ func compile(source string) string {
 
 	fmt.Fprintln(&result, ".global main")
 	fmt.Fprintln(&result, "main:")
-	GenerateAssembly(&result, node)
+	GenerateAssembly(&result, node[0]) // TODO
 	fmt.Fprintln(&result, "ldr x0, [sp], #16")
 	fmt.Fprintln(&result, "mov x8, 93")
 	fmt.Fprintln(&result, "svc 0")

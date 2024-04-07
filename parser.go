@@ -5,6 +5,7 @@ type Node struct {
 	Left     *Node
 	Right    *Node
 	Number   int
+	Offset   int
 }
 
 type NodeType int
@@ -21,6 +22,8 @@ const (
 	GE
 	LT
 	LE
+	ASSIGN
+	LVAR
 )
 
 func mul(t *Tokens) *Node {
@@ -55,6 +58,15 @@ func primary(t *Tokens) *Node {
 		t.ConsumeRParenthesisTokenMust()
 		return e
 	}
+
+	ident := t.ConsumeIdent()
+	if ident != nil {
+		return &Node{
+			NodeType: LVAR,
+			Offset:   (int([]rune(ident.Value)[0]) - int('a') + 1) * 16,
+		}
+	}
+
 	return &Node{
 		NodeType: NUM,
 		Number:   t.ConsumeNumberMust().Value,
@@ -105,9 +117,29 @@ func equality(t *Tokens) *Node {
 }
 
 func expr(t *Tokens) *Node {
-	return equality(t)
+	return assign(t)
 }
 
-func Parse(tokens *Tokens) *Node {
-	return expr(tokens)
+func stmt(t *Tokens) *Node {
+	node := expr(t)
+	t.ConsumeSemicolonTokenMust()
+	return node
+}
+
+func assign(t *Tokens) *Node {
+	node := equality(t)
+	if t.ConsumeAssignToken() {
+		node = &Node{NodeType: ASSIGN, Left: node, Right: assign(t)}
+	}
+	return node
+
+}
+
+func Parse(tokens *Tokens) []*Node {
+	var result []*Node
+	for len(tokens.tokens)-1 > tokens.index {
+		result = append(result, stmt(tokens))
+	}
+
+	return result
 }
